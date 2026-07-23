@@ -1,0 +1,29 @@
+# Binarios
+devagent-cli
+devagent
+
+# Entorno
+.env
+
+# Go
+vendor/
+
+# Notas
+PLAN.md
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Qdrant data
+qdrant_data/
