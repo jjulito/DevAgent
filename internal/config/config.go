@@ -14,3 +14,10 @@ type Config struct {
 	QdrantPort int    `mapstructure:"qdrant_port"`
 	MCPPort    int    `mapstructure:"mcp_port"`
 }
+
+var defaultModels = map[string]string{
+	"openrouter": "meta-llama/llama-4-scout:free",
+	"openai":     "gpt-4o-mini",
+	"gemini":     "gemini-2.5-flash",
+	"ollama":     "llama3.2",
+}
