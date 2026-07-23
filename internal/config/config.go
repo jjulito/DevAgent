@@ -80,3 +80,36 @@ func bindEnvAliases(v *viper.Viper) {
 	v.BindEnv("qdrant_port", "QDRANT_PORT")
 	v.BindEnv("mcp_port", "MCP_PORT")
 }
+
+func (c *Config) APIKeyForProvider() string {
+	switch c.Provider {
+	case "openrouter":
+		return c.OpenRouterAPIKey
+	case "openai":
+		return c.OpenAIAPIKey
+	case "gemini":
+		return c.GeminiAPIKey
+	default:
+		return ""
+	}
+}
+
+func (c *Config) Validate() error {
+	validProviders := []string{"openrouter", "openai", "gemini", "ollama"}
+	valid := false
+	for _, p := range validProviders {
+		if c.Provider == p {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return fmt.Errorf("invalid provider %q, options: %s", c.Provider, strings.Join(validProviders, ", "))
+	}
+
+	if c.Provider != "ollama" && c.APIKeyForProvider() == "" {
+		return fmt.Errorf("API key required for provider %q (configure in .env or environment variable)", c.Provider)
+	}
+
+	return nil
+}
