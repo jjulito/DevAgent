@@ -53,3 +53,11 @@ func Divider() {
 func ModelTag(provider, model string) {
 	dim.Printf("[%s/%s]\n", provider, model)
 }
+
+func StreamChunk(text string) {
+	fmt.Print(text)
+}
+
+func StreamDone() {
+	fmt.Println()
+}
