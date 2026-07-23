@@ -1,6 +1,28 @@
 package provider
 
+import (
+	"net/http"
+)
+
 const openRouterURL = "https://openrouter.ai/api/v1/chat/completions"
+
+type OpenRouterProvider struct {
+	apiKey string
+	model  string
+	client *http.Client
+}
+
+func NewOpenRouter(apiKey, model string) *OpenRouterProvider {
+	return &OpenRouterProvider{
+		apiKey: apiKey,
+		model:  model,
+		client: &http.Client{},
+	}
+}
+
+func (p *OpenRouterProvider) Name() string {
+	return "openrouter"
+}
 
 type orRequest struct {
 	Model    string      `json:"model"`
@@ -34,4 +56,15 @@ type orStreamChunk struct {
 			Content string `json:"content"`
 		} `json:"delta"`
 	} `json:"choices"`
+}
+
+func toORMessages(msgs []Message) []orMessage {
+	out := make([]orMessage, len(msgs))
+	for i, m := range msgs {
+		out[i] = orMessage{
+			Role:    string(m.Role),
+			Content: m.Content,
+		}
+	}
+	return out
 }
