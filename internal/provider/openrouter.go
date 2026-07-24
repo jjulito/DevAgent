@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 )
 
 const openRouterURL = "https://openrouter.ai/api/v1/chat/completions"
@@ -81,6 +82,89 @@ func (p *OpenRouterProvider) Chat(ctx context.Context, messages []Message) (*Res
 		TokensUsed: orResp.Usage.TotalTokens,
 		Model:      orResp.Model,
 	}, nil
+}
+
+func (p *OpenRouterProvider) ChatStream(ctx context.Context, messages []Message) (<-chan string, <-chan error) {
+	textCh := make(chan string, 64)
+	errCh := make(chan error, 1)
+
+	go func() {
+		defer close(textCh)
+		defer close(errCh)
+
+		body := orRequest{
+			Model:    p.model,
+			Messages: toORMessages(messages),
+			Stream:   true,
+		}
+
+		jsonBody, err := json.Marshal(body)
+		if err != nil {
+			errCh <- fmt.Errorf("marshal request: %w", err)
+			return
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, openRouterURL, bytes.NewReader(jsonBody))
+		if err != nil {
+			errCh <- fmt.Errorf("create request: %w", err)
+			return
+		}
+
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+p.apiKey)
+
+		resp, err := p.client.Do(req)
+		if err != nil {
+			errCh <- fmt.Errorf("request failed: %w", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			respBody, _ := io.ReadAll(resp.Body)
+			errCh <- fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
+			return
+		}
+
+		buf := make([]byte, 4096)
+		reader := resp.Body
+		var remainder string
+
+		for {
+			n, readErr := reader.Read(buf)
+			if n > 0 {
+				lines := strings.Split(remainder+string(buf[:n]), "\n")
+				remainder = lines[len(lines)-1]
+
+				for _, line := range lines[:len(lines)-1] {
+					line = strings.TrimSpace(line)
+					if !strings.HasPrefix(line, "data: ") {
+						continue
+					}
+					data := strings.TrimPrefix(line, "data: ")
+					if data == "[DONE]" {
+						return
+					}
+
+					var chunk orStreamChunk
+					if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+						continue
+					}
+					if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
+						textCh <- chunk.Choices[0].Delta.Content
+					}
+				}
+			}
+			if readErr != nil {
+				if readErr != io.EOF {
+					errCh <- readErr
+				}
+				return
+			}
+		}
+	}()
+
+	return textCh, errCh
 }
 
 type orRequest struct {
