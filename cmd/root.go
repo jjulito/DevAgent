@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jjulito/devagent-cli/internal/config"
@@ -52,4 +53,10 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&flagProvider, "provider", "p", "", "LLM provider (openrouter, ollama, openai, gemini)")
 	rootCmd.PersistentFlags().StringVarP(&flagModel, "model", "m", "", "specific model to use")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "detailed output")
+
+	rootCmd.Run = func(cmd *cobra.Command, args []string) {
+		output.Banner()
+		fmt.Println()
+		cmd.Usage()
+	}
 }
