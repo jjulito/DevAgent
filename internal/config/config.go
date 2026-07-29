@@ -23,7 +23,7 @@ type Config struct {
 }
 
 var defaultModels = map[string]string{
-	"openrouter": "meta-llama/llama-4-scout:free",
+	"openrouter": "google/gemma-4-31b-it:free",
 	"openai":     "gpt-4o-mini",
 	"gemini":     "gemini-2.5-flash",
 	"ollama":     "llama3.2",
