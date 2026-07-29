@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/jjulito/devagent-cli/internal/output"
 	"github.com/jjulito/devagent-cli/internal/provider"
@@ -48,16 +49,22 @@ var reviewCmd = &cobra.Command{
 			output.Divider()
 		}
 
+		var sb strings.Builder
+
 		for {
 			select {
 			case text, ok := <-textCh:
 				if !ok {
 					output.StreamDone()
 					output.Divider()
+					if err := output.PrintMarkdown(sb.String()); err != nil {
+						output.Error(fmt.Sprintf("Failed to render formatted markdown: %v", err))
+					}
+					output.Divider()
 					output.Success("Review completed")
 					return nil
 				}
-				output.StreamChunk(text)
+				sb.WriteString(text)
 			case err, ok := <-errCh:
 				if ok && err != nil {
 					return err
