@@ -21,12 +21,19 @@ type Result struct {
 	Files     []string
 }
 
-const systemPrompt = `You are a senior code reviewer. Analyze the following git diff and provide:
+const systemPrompt = `You are a senior code reviewer. Analyze the following git diff and format your response cleanly using Markdown headings (e.g. ### Section Name):
 
-1. **Summary**: Brief overview of the changes
-2. **Issues**: Bugs, security risks, or logic errors (if any)
-3. **Suggestions**: Improvements for readability, performance, or best practices
-4. **Rating**: Overall quality (Excellent / Good / Needs Work / Critical Issues)
+### Summary
+Brief overview of the changes
+
+### Issues
+Bugs, security risks, or logic errors (if any)
+
+### Suggestions
+Improvements for readability, performance, or best practices
+
+### Rating
+Overall quality (Excellent / Good / Needs Work / Critical Issues)
 
 Be concise and actionable. Focus on what matters.`
 
