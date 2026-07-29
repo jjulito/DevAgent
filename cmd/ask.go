@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -48,16 +49,22 @@ var askCmd = &cobra.Command{
 
 		textCh, errCh := llm.ChatStream(ctx, messages)
 
+		var sb strings.Builder
+
 		for {
 			select {
 			case text, ok := <-textCh:
 				if !ok {
 					output.StreamDone()
 					output.Divider()
+					if err := output.PrintMarkdown(sb.String()); err != nil {
+						output.Error(fmt.Sprintf("Failed to render formatted markdown: %v", err))
+					}
+					output.Divider()
 					output.Success("Completed")
 					return nil
 				}
-				output.StreamChunk(text)
+				sb.WriteString(text)
 			case err, ok := <-errCh:
 				if ok && err != nil {
 					return err
